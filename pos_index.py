@@ -6,7 +6,11 @@ import pickle # For serializing data
 import os.path # For checking whether a file exist
 
 from nltk.stem import PorterStemmer as ps # For stemming and word tokenization
-#from nltk.tokenize import sent_tokenize, word_tokenize # 
+
+def isint(s):
+    try: int(s)
+    except ValueError: return False
+    return True
 
 # Takes a file that has a list of files
 def getInputFiles(filelist):
@@ -44,8 +48,8 @@ def showPreview(positions,radius):
         with open(docArr[doc_id]) as f:
             wordArr = [a for a in preprocess(f.read()).split(' ') if a != ""]
             result = " ".join(wordArr[word_index-radius:word_index+radius])
-            print(str(i+1)+": ..."+result+"- "+files[doc_id].split("/")[-1]+"... :"+str(word_index))
-        print()
+            print(str(i+1)+": ..."+result+"... "+files[doc_id].split("/")[-1])
+    print()
 
 # Serialization/Positional Index
 pi = {}
@@ -60,7 +64,7 @@ else:
         pickle.dump(pi,f)
 
 # User interface and positional index querying
-while 1:
+while True:
     print("Enter Query: 'word word <int>'")
     sys.stdout.write("'/exit' to close > ")
     q = [a for a in input().lower().split(' ') if a != ""]
@@ -71,8 +75,7 @@ while 1:
         word1, word2 = q
         word1 = ps().stem(preprocess(word1).replace(' ',''))
         word2 = ps().stem(preprocess(word2).replace(' ',''))
-        print(word1)
-        print("Loading... \n")
+        print("Searching... \n")
         for doc1, index1 in pi[word1]:
             for doc2, index2 in pi[word2]:
                 if doc1 != doc2: continue
@@ -80,6 +83,12 @@ while 1:
         showPreview(matches,5)
     elif len(q) == 3:
         word1, word2, l = q
+        if not isint(l):
+            print("arg 3 needs to be an int\n")
+            continue
+        word1 = ps().stem(preprocess(word1).replace(' ',''))
+        word2 = ps().stem(preprocess(word2).replace(' ',''))
+        print("Searching... \n")
         rad = int(l)
         for doc1, index1 in pi[word1]:
             for doc2, index2 in pi[word2]:
@@ -88,4 +97,4 @@ while 1:
                 # when abs_pos is 0, the word is itself
                 if abs_pos <= rad and abs_pos != 0: matches.append( (doc1,index1) )
         showPreview(matches, 5 if rad <= 5 else rad)
-    else: print("Needs to have 2 or 3 args")
+    else: print("Needs to have 2 or 3 args\n")
